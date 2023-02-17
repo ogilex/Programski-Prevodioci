@@ -1,0 +1,432 @@
+//import section
+
+import java_cup.runtime.*;
+import java.io.*;
+
+
+parser code
+{:
+
+   public int errNo = 0;
+   public static void main(String[] args)
+   {
+      try
+	  {
+		   FileReader file = new FileReader( args[0] );
+		   Scanner scanner = new MPLexer( file );
+		   MPParser parser = new MPParser( scanner );
+		   parser.parse();
+		   if ( parser.errNo == 0 )
+                System.out.println( "Parsiranje zavrseno. Nema gresaka" );
+           else
+                System.out.println( "Parsiranje je zavrseno sa brojem gresaka:" + parser.errNo );
+	  }
+	  catch( Exception e )
+	  {
+		   System.out.println(e.getMessage());
+	  }
+   }
+   public int getLine()
+   {
+      return (( MPLexer) getScanner()).getLine();
+   }
+:};
+
+//Terminal symbols
+
+terminal PROGRAM, INT, BOOL, BEGIN, END, READ, WRITE, REAL, PLUS, MUL, LEFTPAR, RIGHTPAR, MINUS, SEMI, COMMA, ID, FOR, OR, AND, CONST, LESS, LESSEQ, EQ, NOTEQ, GREATER, GREATEREQ, DIV, ASSIGN;
+
+
+//Nonterminal symbols
+non terminal Block, Program, VarSection, StatementList, VarDecl, Type, NameList, Statement, Expression, Assignement, ExpressionList, AndExpression, RelExpression, ArExpression, RelOp, Term, Factor;
+
+
+//Grammar
+
+Program ::= PROGRAM ID Block
+            {:
+               System.out.println( "Redukcija po smeni 1." );
+            :}
+            | PROGRAM ID error:e
+                        {:
+                           System.out.println("Greska u liniji " + parser.getLine() + ": " + "Telo programa je nekorektno.");
+                           parser.errNo++;
+                        :}
+            | PROGRAM error
+                        {:
+                           System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ime promenljive.");
+                           parser.errNo++;
+                        :}
+            | error
+                        {:
+                           System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje rec 'program'.");
+                           parser.errNo++;
+                        :}
+            ;
+
+Block ::= BEGIN VarSection StatementList END
+             {:
+                System.out.println( "Redukcija po smeni 2." );
+             :}
+             | BEGIN VarSection StatementList error
+                         {:
+                            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje kljucna rec 'end'.");
+                            parser.errNo++;
+                         :}
+             | BEGIN error
+                         {:
+                            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Telo bloka je nekorektno");
+                            parser.errNo++;
+                         :}
+             ;
+
+VarSection ::= VarSection VarDecl
+            {:
+               System.out.println( "Redukcija po smeni 3." );
+            :}
+          | VarSection error
+             {:
+               System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje deklaracija.");
+               parser.errNo++;
+             :}
+          | VarDecl
+            {:
+               System.out.println( "Redukcija po smeni 4." );
+            :}
+          ;
+
+VarDecl ::= Type NameList SEMI
+          {:
+          System.out.println( "Redukcija po smeni 5." );
+          :}
+          | Type NameList error
+            {:
+               System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ';' .");
+               parser.errNo++;
+            :}
+          | Type error SEMI
+            {:
+               System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ime tipa .");
+               parser.errNo++;              
+            :}
+
+          | Type error
+            {:
+               System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje deklaracija .");
+               parser.errNo++;              
+            :}
+          ;
+
+NameList ::= NameList COMMA ID
+          {:
+          System.out.println( "Redukcija po smeni 6." );
+          :}
+        | NameList COMMA error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ime promenljive nakon simbola ','" );
+            parser.errNo++;            
+          :}
+        | ID
+          {:
+          System.out.println( "Redukcija po smeni 7." );
+          :}
+          ;
+
+Type ::= INT
+          {:
+          System.out.println( "Redukcija po smeni 8." );
+          :}
+        | REAL
+          {:
+          System.out.println( "Redukcija po smeni 9." );
+          :}
+        | BOOL
+          {:
+          System.out.println( "Redukcija po smeni 10." );
+          :}
+          ;
+
+StatementList ::= StatementList SEMI Statement
+          {:
+          System.out.println( "Redukcija po smeni 11." );
+          :}
+        | StatementList error Statement
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ';'" );
+            parser.errNo++;             
+          :}
+        | Statement
+          {:
+          System.out.println( "Redukcija po smeni 12." );
+          :}
+          ;
+
+Statement ::= FOR LEFTPAR Expression COMMA Expression COMMA Expression RIGHTPAR Statement
+          {:
+          System.out.println( "Redukcija po smeni 13." );
+          :}
+        | FOR LEFTPAR Expression COMMA Expression COMMA Expression error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ')' " );
+            parser.errNo++;               
+          :}
+        | FOR LEFTPAR Expression COMMA Expression COMMA error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje 3. izraz " );
+            parser.errNo++;               
+          :}
+        |  FOR LEFTPAR Expression COMMA Expression error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ',' izmedju 2. i 3. izraza." );
+            parser.errNo++;              
+          :}
+        |  FOR LEFTPAR Expression COMMA error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje 2. izraz " );
+            parser.errNo++;               
+          :}
+        |  FOR LEFTPAR Expression error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ',' izmedju 1. i 2. izraza." );
+            parser.errNo++;               
+          :}
+        |  FOR LEFTPAR error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje 1. izraz " );
+            parser.errNo++;               
+          :}
+        | FOR error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje '(' " );
+            parser.errNo++;              
+          :}          
+        | Assignement
+          {:
+          System.out.println( "Redukcija po smeni 14." );
+          :}
+        | READ LEFTPAR NameList RIGHTPAR
+          {:
+          System.out.println( "Redukcija po smeni 15." );
+          :}
+        | READ LEFTPAR NameList error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ')' " );
+            parser.errNo++;           
+          :}
+        | READ LEFTPAR error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ime promenljive " );
+            parser.errNo++;             
+          :}
+        | READ error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje '(' " );
+            parser.errNo++;             
+          :}        
+        | WRITE LEFTPAR ExpressionList RIGHTPAR
+          {:
+          System.out.println( "Redukcija po smeni 16." );
+          :}
+        | WRITE LEFTPAR ExpressionList error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ')' " );
+            parser.errNo++;           
+          :}
+        | WRITE LEFTPAR error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje izraz " );
+            parser.errNo++;           
+          :}
+        | WRITE error
+        {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje '(' " );
+            parser.errNo++;            
+        :}        
+        | Block
+          {:
+          System.out.println( "Redukcija po smeni 17." );
+          :}
+          ;
+
+Assignement ::= ID ASSIGN Expression
+          {:
+          System.out.println( "Redukcija po smeni 18." );
+          :}
+        | ID ASSIGN error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nerkorektan izraz " );
+            parser.errNo++;  
+          :}
+        | ID error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje '=' " );
+            parser.errNo++;              
+          :}
+          ;
+
+Expression ::= Expression OR AndExpression
+          {:
+          System.out.println( "Redukcija po smeni 19." );
+          :}
+        | AndExpression
+          {:
+          System.out.println( "Redukcija po smeni 20." );
+          :}
+        | Expression OR error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nerkorektan izraz " );
+            parser.errNo++;             
+          :}
+          ;          
+
+
+AndExpression ::= AndExpression AND RelExpression
+          {:
+          System.out.println( "Redukcija po smeni 21." );
+          :}
+        | RelExpression
+          {:
+          System.out.println( "Redukcija po smeni 22." );
+          :}
+        | AndExpression AND error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nerkorektan izraz " );
+            parser.errNo++;                
+          :}
+          ;
+
+RelExpression ::= ArExpression RelOp ArExpression
+          {:
+          System.out.println( "Redukcija po smeni 23." );
+          :}
+        | ArExpression RelOp error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nerkorektan izraz " );
+            parser.errNo++;              
+          :}
+        | ArExpression
+          {:
+          System.out.println( "Redukcija po smeni 24." );
+          :}
+          ;
+  
+RelOp ::= LESS
+          {:
+          System.out.println( "Redukcija po smeni 25." );
+          :}
+        | LESSEQ
+          {:
+          System.out.println( "Redukcija po smeni 26." );
+          :}
+        | EQ
+          {:
+          System.out.println( "Redukcija po smeni 27." );
+          :}
+        | NOTEQ
+          {:
+          System.out.println( "Redukcija po smeni 28." );
+          :}
+        | GREATER
+          {:
+          System.out.println( "Redukcija po smeni 29." );
+          :}
+        | GREATEREQ
+          {:
+          System.out.println( "Redukcija po smeni 30." );
+          :}
+          ;
+
+ArExpression ::= ArExpression PLUS Term
+          {:
+          System.out.println( "Redukcija po smeni 31." );
+          :}
+        | ArExpression PLUS error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nerkorektan izraz " );
+            parser.errNo++;              
+          :}
+        | ArExpression MINUS Term
+          {:
+          System.out.println( "Redukcija po smeni 32." );
+          :}
+        | ArExpression MINUS error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nerkorektan izraz " );
+            parser.errNo++;             
+          :}
+        | Term
+          {:
+          System.out.println( "Redukcija po smeni 33." );
+          :}
+          ;
+
+Term ::= Term MUL Factor
+          {:
+          System.out.println( "Redukcija po smeni 34." );
+          :}
+        | Term MUL error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nerkorektan izraz " );
+            parser.errNo++;             
+          :}
+        | Term DIV Factor
+          {:
+          System.out.println( "Redukcija po smeni 35." );
+          :}
+        | Term DIV error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nerkorektan izraz " );
+            parser.errNo++;              
+          :}
+        | Factor
+          {:
+          System.out.println( "Redukcija po smeni 36." );
+          :}
+          ;
+        
+Factor ::= ID
+          {:
+          System.out.println( "Redukcija po smeni 37." );
+          :}
+        | CONST
+          {:
+          System.out.println( "Redukcija po smeni 38." );
+          :}
+        | LEFTPAR Expression RIGHTPAR
+          {:
+          System.out.println( "Redukcija po smeni 39." );
+          :}
+        | LEFTPAR Expression error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje ')' " );
+            parser.errNo++;                
+          :}
+        | LEFTPAR error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje izraz " );
+            parser.errNo++;                
+          :}          
+          ;
+
+ExpressionList ::= ExpressionList COMMA Expression
+          {:
+          System.out.println( "Redukcija po smeni 40." );
+          :}
+        | ExpressionList COMMA error
+          {:
+            System.out.println("Greska u liniji " + parser.getLine() + ": " + "Nedostaje izraz " );
+            parser.errNo++;            
+          :}
+        | Expression
+          {:
+          System.out.println( "Redukcija po smeni 41." );
+          :}
+          ;
+
+
+	
+
+
+
+
+

@@ -1,0 +1,8 @@
+program
+  begin
+     int i = 5;
+     for(int j = 0 , j<=i, j+1) write(i)
+     int k=i+1
+     write(k)
+     real r = k+i+0.5
+     write(r)

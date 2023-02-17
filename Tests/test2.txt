@@ -1,0 +1,8 @@
+program b 
+  begin
+     int i = 5;
+     int j = 10;
+     int k=i+j;
+     write(k)
+     write(r)
+  end

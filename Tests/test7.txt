@@ -1,0 +1,6 @@
+program a 
+  begin
+     int i;
+     for(int i = 0 , i<=5, j+1) write(i)
+     write(r)
+  end

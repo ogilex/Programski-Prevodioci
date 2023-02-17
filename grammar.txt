@@ -1,0 +1,21 @@
+Program → program ID Block
+Block → begin VarSection StatementList end
+VarSection→ VarSection VarDecl | VarDecl
+VarDecl → Type NameList;
+NameList → NameList , ID | ID
+Type → int | real | boolean
+StatementList → StatementList ; Statement | Statement
+Statement → for ( Expression, Expression, Expression ) Statement
+|  Assignment
+|  read( NameList )
+| write ( ExpressionList )
+| Block
+Assignement → ID = Expression
+Expression → Expression OR AndExpression | AndExpression
+AndExpression → AndExpression AND RelExpression | RelExpression
+RelExpression → ArExpression RelOp ArExpression | ArExpression
+RelOp → < | <= | == | <> | > | >=
+ArExpression → ArExpression + Term | ArExpression - Term | Term
+Term → Term * Factor | Term / Factor | Factor
+Factor → ID | CONST | ( Expression )
+ExpressionList → ExpressionList , Expression | Expression

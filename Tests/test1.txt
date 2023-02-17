@@ -1,0 +1,8 @@
+program a 
+  begin
+     int i = 5;
+     int k;
+     write(k)
+     real r = k+i+0.5;
+     write(r)
+  end
